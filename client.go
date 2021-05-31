@@ -425,6 +425,17 @@ func (tc *Client) LookupSecurities(
 	return result.Securities.Security, err
 }
 
+// Get a list of symbols matching the given parameters.
+func (tc *Client) LookupOptionSymbols(underlying string) ([]OptionSymbol, error) {
+	url := fmt.Sprintf("%s/v1/markets/options/lookup?underlying=%s", tc.endpoint, underlying)
+
+	var result struct {
+		Symbols []OptionSymbol
+	}
+	err := tc.getJSON(url, &result)
+	return result.Symbols, err
+}
+
 // Get the securities on the Easy-to-Borrow list.
 func (tc *Client) GetEasyToBorrow() ([]Security, error) {
 	url := tc.endpoint + "/v1/markets/etb"
@@ -482,14 +493,19 @@ func (tc *Client) GetOptionChain(symbol string, expiration time.Time) ([]*Quote,
 	return result.Options.Option, err
 }
 
-func (tc *Client) GetQuotes(symbols []string) ([]*Quote, error) {
-	url := tc.endpoint + "/v1/markets/quotes?symbols=" + strings.Join(symbols, ",")
+func (tc *Client) GetQuotes(symbols []string, greeks bool) ([]*Quote, error) {
+	endpoint := fmt.Sprintf("%s/v1/markets/quotes", tc.endpoint)
+
+	body := url.Values{}
+	body.Set("greeks", strconv.FormatBool(greeks))
+	body.Set("symbols", strings.Join(symbols, ","))
+
 	var result struct {
 		Quotes struct {
 			Quote []*Quote
 		}
 	}
-	err := tc.getJSON(url, &result)
+	err := tc.postJSON(endpoint, body, &result)
 	return result.Quotes.Quote, err
 }
 
@@ -785,6 +801,21 @@ func (tc *Client) GetPriceStatistics(symbols []string) (GetPriceStatisticsRespon
 
 func (tc *Client) getJSON(url string, result interface{}) error {
 	resp, err := tc.do("GET", url, nil, tc.retryLimit)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(resp.Status + ": " + string(body))
+	}
+
+	dec := json.NewDecoder(resp.Body)
+	return dec.Decode(result)
+}
+
+func (tc *Client) postJSON(url string, body url.Values, result interface{}) error {
+	resp, err := tc.do("POST", url, body, tc.retryLimit)
 	if err != nil {
 		return err
 	}

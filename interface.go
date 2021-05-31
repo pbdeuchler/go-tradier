@@ -78,6 +78,11 @@ type Security struct {
 	Description string
 }
 
+type OptionSymbol struct {
+	Root    string `json:"rootSymbol"`
+	Options []string
+}
+
 type FloatOrNaN float64
 
 func (f *FloatOrNaN) UnmarshalJSON(data []byte) error {
@@ -104,6 +109,20 @@ func (f FloatOrNaN) Value() (driver.Value, error) {
 	}
 
 	return float64(f), nil
+}
+
+type Greeks struct {
+	Delta         float64
+	Gamma         float64
+	Theta         float64
+	Vega          float64
+	Rho           float64
+	Phi           float64
+	BidImpliedVol float64 `json:"bid_iv"`
+	MidImpliedVol float64 `json:"mid_iv"`
+	AskImpliedVol float64 `json:"ask_iv"`
+	SMVImpliedVol float64 `json:"smv_vol"`
+	UpdatedAt     float64
 }
 
 type Quote struct {
@@ -141,6 +160,7 @@ type Quote struct {
 	ExpirationType   string   `json:"expiration_type"`
 	OptionType       string   `json:"option_type"`
 	RootSymbol       string   `json:"root_symbol"`
+	Greeks           *Greeks
 }
 
 type TimeSale struct {
