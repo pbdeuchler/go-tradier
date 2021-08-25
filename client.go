@@ -482,7 +482,7 @@ func (tc *Client) GetOptionStrikes(symbol string, expiration time.Time) ([]float
 
 // Get an option chain.
 func (tc *Client) GetOptionChain(symbol string, expiration time.Time) ([]*Quote, error) {
-	params := "?symbol=" + symbol + "&expiration=" + expiration.Format("2006-01-02")
+	params := "?greeks=true&symbol=" + symbol + "&expiration=" + expiration.Format("2006-01-02")
 	url := tc.endpoint + "/v1/markets/options/chains" + params
 	var result struct {
 		Options struct {
@@ -814,11 +814,12 @@ func (tc *Client) getJSON(url string, result interface{}) error {
 	return dec.Decode(result)
 }
 
-func (tc *Client) postJSON(url string, body url.Values, result interface{}) error {
-	resp, err := tc.do("POST", url, body, tc.retryLimit)
+func (tc *Client) postJSON(url string, data url.Values, result interface{}) error {
+	resp, err := tc.do("POST", url, data, tc.retryLimit)
 	if err != nil {
 		return err
 	}
+
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
