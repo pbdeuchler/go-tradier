@@ -38,6 +38,7 @@ type QuoteEvent struct {
 }
 
 type TimeSaleEvent struct {
+	Type       string `json:"type"`
 	Symbol     string
 	Exchange   string  `json:"exch"`
 	Bid        float64 `json:",string"`
@@ -54,6 +55,7 @@ type TimeSaleEvent struct {
 
 type TradeEvent struct {
 	Symbol           string
+	Type             string  `json:"type"`
 	Exchange         string  `json:"exch"`
 	Price            float64 `json:",string"`
 	Last             float64 `json:",string"`

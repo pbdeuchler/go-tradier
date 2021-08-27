@@ -500,13 +500,27 @@ func (tc *Client) GetQuotes(symbols []string, greeks bool) ([]*Quote, error) {
 	body.Set("greeks", strconv.FormatBool(greeks))
 	body.Set("symbols", strings.Join(symbols, ","))
 
-	var result struct {
-		Quotes struct {
-			Quote []*Quote
+	if len(symbols) < 2 {
+		var result struct {
+			Quotes struct {
+				Quote *Quote
+			}
 		}
+		err := tc.postJSON(endpoint, body, &result)
+		if err != nil {
+			return nil, err
+		}
+		quotes := []*Quote{result.Quotes.Quote}
+		return quotes, nil
+	} else {
+		var result struct {
+			Quotes struct {
+				Quote []*Quote
+			}
+		}
+		err := tc.postJSON(endpoint, body, &result)
+		return result.Quotes.Quote, err
 	}
-	err := tc.postJSON(endpoint, body, &result)
-	return result.Quotes.Quote, err
 }
 
 func (tc *Client) getTimeSalesUrl(symbol string, interval Interval, start, end time.Time) string {
@@ -825,7 +839,6 @@ func (tc *Client) postJSON(url string, data url.Values, result interface{}) erro
 		body, _ := ioutil.ReadAll(resp.Body)
 		return errors.New(resp.Status + ": " + string(body))
 	}
-
 	dec := json.NewDecoder(resp.Body)
 	return dec.Decode(result)
 }
