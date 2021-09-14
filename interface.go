@@ -122,7 +122,7 @@ type Greeks struct {
 	MidImpliedVol float64 `json:"mid_iv"`
 	AskImpliedVol float64 `json:"ask_iv"`
 	SMVImpliedVol float64 `json:"smv_vol"`
-	UpdatedAt     float64
+	UpdatedAt     DateTime
 }
 
 type Quote struct {
